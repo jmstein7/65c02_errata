@@ -23,19 +23,21 @@ module top(
     input clk,
     input acia_clk,
     input reset,
-    input rxd, //in to FPGA UART
+    input cts,
+    input rxd, //in to UART
     inout logic [7:0] data_io,
     output reg [15:0] address,
     output rwb,
     output phi2,
     output led_a,
     output wire resb,
-    output txd //out to FPGA UART
+    output txd, //out to UART
+    output rts
     );
 
     wire rdy = 1'b1;
     wire WE, RE, cs, rom_e, ram_e, bus_e, acia_e; 
-    wire rts, cts; 
+
     logic [7:0] read;
     logic [7:0] write; 
     logic [7:0] write_bus; 
@@ -80,7 +82,6 @@ module top(
     assign cs = ~acia_e; //ACIA active low-chip select signal
     assign bus_e = (~rom_e && ~ram_e && ~acia_e); 
     
-    assign cts = rts; //soft jumper
     
     //processor writes to ram and the acia
     assign ram_write = (WE && ram_e) ? write : 'bZ; 
@@ -157,8 +158,8 @@ ACIA ACIA_a(
     .RTSB(rts),    //: out    std_logic;
     .CTSB(cts),    //: in     std_logic;
     .DTRB(),    //: out    std_logic;
-    .RXD(txd),     //: in     std_logic;
-    .TXD(rxd),     //: buffer std_logic;
+    .RXD(rxd),     //: in     std_logic;
+    .TXD(txd),     //: buffer std_logic;
     .IRQn()    //: buffer std_logic
    );
     
