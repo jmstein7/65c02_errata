@@ -12,7 +12,10 @@ module top_tb;
    reg reset;
    reg acia_clk;
    reg rxd;
+   reg cts;
+   
    wire txd;
+   wire rts;
 
    wire [7:0] data_io;
 
@@ -31,6 +34,7 @@ initial  begin
    clk   = 1'b0;
    acia_clk   = 1'b0;
    rxd   = 1'b1;
+   cts   = 1'b0;   
    reset = 1'b0;
    repeat(10) begin
       @(posedge clk);
@@ -67,7 +71,9 @@ top top
    .clk(clk),
    .acia_clk(acia_clk),
    .rxd(rxd),
+   .cts(cts),
    .txd(txd),
+   .rts(rts),
    .reset(reset),
    .data_io(data_io),
    .address(address),
