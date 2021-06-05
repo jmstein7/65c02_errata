@@ -38,20 +38,20 @@ module top(
     wire rdy = 1'b1;
     wire WE, RE, cs, rom_e, ram_e, bus_e, acia_e; 
 
-    logic [7:0] read;
-    logic [7:0] write; 
-    logic [7:0] write_bus; 
-    logic [7:0] read_bus; 
-    reg [7:0] rom_read; 
-    reg [7:0] ram_read; 
-    reg [7:0] ram_write; 
-    reg [7:0] acia_in; 
-    reg [7:0] acia_out; 
-    logic [15:0] AD; 
-    logic [15:0] address_bus; 
-    logic [1:0] rs;
-    logic [7:0] DO; 
-    logic [7:0] DI; 
+    wire [7:0] read;
+    wire [7:0] write; 
+    wire [7:0] write_bus; 
+    wire [7:0] read_bus; 
+    wire [7:0] rom_read; 
+    wire [7:0] ram_read; 
+    wire [7:0] ram_write; 
+    wire [7:0] acia_in; 
+    wire [7:0] acia_out; 
+    wire [15:0] AD; 
+    wire [15:0] address_bus; 
+    wire [1:0] rs;
+    wire [7:0] DO; 
+    wire [7:0] DI; 
     
     //select registers
     reg bus_select;
@@ -123,8 +123,8 @@ cpu_65c02 cpu_alpha(
      .DI(read),                     // data bus input
      .DO(write),                // data bus output 
      .WE(WE),                          // write enable
-     .IRQ(),                          // interrupt request
-     .NMI(),                          // non-maskable interrupt request
+     .IRQ(1'b0),                          // interrupt request
+     .NMI(1'b0),                          // non-maskable interrupt request
      .RDY(rdy)                         // Ready signal. Pauses CPU when RDY=0
      );                      // debug for simulation
 
