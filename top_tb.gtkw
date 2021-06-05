@@ -1,17 +1,18 @@
 [*]
 [*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
-[*] Sat Jun  5 11:02:20 2021
+[*] Sat Jun  5 16:47:40 2021
 [*]
 [dumpfile] "/disk1/home/dmb/atom/65c02_errata/dump.vcd"
-[dumpfile_mtime] "Sat Jun  5 10:47:18 2021"
-[dumpfile_size] 97783531
+[dumpfile_mtime] "Sat Jun  5 16:47:16 2021"
+[dumpfile_size] 110452204
 [savefile] "/disk1/home/dmb/atom/65c02_errata/top_tb.gtkw"
-[timestart] 160000
+[timestart] 0
 [size] 1853 1145
 [pos] -1 -1
-*-19.000000 2776000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-31.000000 1450000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] top_tb.
 [treeopen] top_tb.top.
+[treeopen] top_tb.top.ACIA_a.
 [treeopen] top_tb.top.cpu_alpha.
 [sst_width] 223
 [signals_width] 166
@@ -25,10 +26,17 @@ top_tb.address[15:0]
 top_tb.data_io[7:0]
 @28
 top_tb.rwb
-@201
+@200
+-
 -
 @28
+top_tb.rxd
+top_tb.txd
+@200
+-
+@29
 top_tb.top.clk
+@28
 top_tb.top.reset
 @22
 top_tb.top.address_bus[15:0]
@@ -53,5 +61,7 @@ top_tb.top.write[7:0]
 top_tb.top.read_bus[7:0]
 top_tb.top.write_bus[7:0]
 top_tb.top.data_io[7:0]
+@200
+-
 [pattern_trace] 1
 [pattern_trace] 0

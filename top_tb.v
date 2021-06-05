@@ -1,11 +1,18 @@
 `timescale 1ns/1ns
 
+// 10MHz 6502 Clock
 `define T_clock 100
+
+// 1.8432MHz ACIA Clock
+`define T_acia_clock 542
 
 module top_tb;
 
    reg clk;
    reg reset;
+   reg acia_clk;
+   reg rxd;
+   wire txd;
 
    wire [7:0] data_io;
 
@@ -22,23 +29,16 @@ module top_tb;
 initial  begin
    $dumpvars();
    clk   = 1'b0;
+   acia_clk   = 1'b0;
+   rxd   = 1'b1;
    reset = 1'b0;
-   @(posedge clk);
-   @(posedge clk);
-   @(posedge clk);
-   @(posedge clk);
-   @(posedge clk);
+   repeat(10) begin
+      @(posedge clk);
+   end
    reset = 1'b1;
-   @(posedge clk);
-   @(posedge clk);
-   @(posedge clk);
-   @(posedge clk);
-   @(posedge clk);
-   @(posedge clk);
-   @(posedge clk);
-   @(posedge clk);
-   @(posedge clk);
-   @(posedge clk);
+   repeat(10) begin
+      @(posedge clk);
+   end
    reset = 1'b0;
    #(`T_clock * 200000)
    $finish;
@@ -48,26 +48,26 @@ always #(`T_clock / 2) begin
    clk = ~clk;
 end
 
-assign  acia_select = ({address[15:2], 2'b0} == 16'h8000);
-
-always begin
-   @(negedge clk) write_data <= (rwb && acia_select && address[1:0] == 2'b01) ? 8'h10 : 8'hZZ;
-   @(posedge clk) write_data <= 8'hZZ;
+always #(`T_acia_clock / 2) begin
+   acia_clk = ~acia_clk;
 end
 
-always @(posedge clk) begin
-   if (!rwb && acia_select && address[1:0] == 2'b00) begin
-      $display("%x %c", data_io, data_io);
-   end
-end
+// assign  acia_select = ({address[15:2], 2'b0} == 16'h8000);
 
-assign data_io = write_data;
+// always @(posedge clk) begin
+//   if (!rwb && acia_select && address[1:0] == 2'b00) begin
+//      $display("%x %c", data_io, data_io);
+//   end
+// end
 
 
 // Unit under test
 top top
   (
    .clk(clk),
+   .acia_clk(acia_clk),
+   .rxd(rxd),
+   .txd(txd),
    .reset(reset),
    .data_io(data_io),
    .address(address),
