@@ -93,6 +93,8 @@ module top
    // (currently active one in four cycles)
    // ========================================================
 
+   // Note: this block does not use a reset to ensure everything
+   // keeps being clocked when reset is asserted.
    always @(posedge clk) begin
       clken_ctr <= clken_ctr + 1;
       cpu_clken <= (clken_ctr == 2'b11);
@@ -102,20 +104,24 @@ module top
    // 65C02
    // ========================================================
 
+   // Note, the AB, DO and WE  outputs are one early (compared
+   // to a normal 6502). Avoid using them directly unless you
+   // really understand how they work.
    cpu_65c02 cpu_alpha
      (
-       .clk(clk),               // CPU clock
-       .reset(reset),           // RST signal
-       .AB(cpu_addr_next),      // address bus
+       .clk(clk),               // system clock
+       .reset(reset),           // reset
+       .AB(cpu_addr_next),      // address bus (early)
        .DI(cpu_din),            // data bus input
-       .DO(cpu_dout_next),      // data bus output
-       .WE(cpu_we_next),        // write enable
+       .DO(cpu_dout_next),      // data bus output (early)
+       .WE(cpu_we_next),        // write enable (early)
        .IRQ(1'b0),              // interrupt request
        .NMI(1'b0),              // non-maskable interrupt request
-       .RDY(cpu_clken)          // Ready signal. Pauses CPU when RDY=0
-       );                       // debug for simulation
+       .RDY(cpu_clken)          // RSY is used as a synchronous clock enable
+       );
 
-   // Register the outputs to give a standard 6502 interface
+   // Register the early outputs to give a standard 6502 interface
+   // (Everything else should use these registered versions)
    always @(posedge clk) begin
        if (cpu_clken) begin
            cpu_addr <= cpu_addr_next;
@@ -124,18 +130,22 @@ module top
        end
    end
 
-   // CPU data input mux
+   // CPU data input mux, default to the external bus if
+   // nothing internal is selected.
    assign cpu_din = ram_e  ? ram_dout  :
                     rom_e  ? rom_dout  :
                     acia_e ? acia_dout :
                     via_e  ? via_dout  :
-                    data_io;                 // default to external bus
+                    data_io;
 
    // ========================================================
    // RAM
    // ========================================================
 
    assign ram_e = (cpu_addr < 16'h8000);
+
+   // TODO: It's not really necessary for this to be an external module
+   // It's only about 5 lines of verilog to infer a blcok RAM
 
    SFOT_ram RAM_alpha
      (
@@ -153,9 +163,12 @@ module top
 
    assign rom_e = (cpu_addr >= 16'hc000);
 
+   // TODO: It's not really necessary for this to be an external module
+   // It's only about 5 lines of verilog to infer a block ROM
+
    SFOT_ROM_16k ROM_alpha
      (
-	  .clk(clk),
+      .clk(clk),
       .rom_enable(rom_e),
       .read(1'b1),
       .addra(cpu_addr),
@@ -167,6 +180,8 @@ module top
    // ========================================================
 
    assign acia_e = (cpu_addr >= 16'h8000 && cpu_addr <= 16'h800F);
+
+   // Include cpu_clken here to avoid muptiple accesses
    assign acia_csb = ~(acia_e && cpu_clken);
 
    ACIA ACIA_a
@@ -252,13 +267,14 @@ module top
 
    assign rwb = ~cpu_we;
 
+   // TODO: ideally this should be visible externally
    // assign address = cpu_addr;
 
-   // Default to the external bus when no other chip enable matches
+   // Reads default to the external bus when no other enable matches
    assign bus_e = (~rom_e && ~ram_e && ~acia_e && via_e);
 
-   assign data_io  = bus_e  ? 8'hZZ    :
-                     cpu_we ? cpu_dout :
+   assign data_io  = cpu_we ? cpu_dout :
+                     bus_e  ? 8'hZZ    :
                      cpu_din;
 
    // ========================================================
