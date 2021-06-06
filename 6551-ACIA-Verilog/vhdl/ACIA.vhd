@@ -83,7 +83,7 @@ signal R_SBR:    std_logic_vector(3 downto 0) := "0000";
 signal R_WDL:    std_logic_vector(1 downto 0) := "00";
 signal R_PMC:    std_logic_vector(1 downto 0) := "00";
 signal R_TIC:    std_logic_vector(1 downto 0) := "00";
-signal BCLK:     std_logic := '0';
+signal BCLK:     std_logic;
 signal RXFULL:   std_logic;
 signal FRAME:    std_logic;
 signal OVERFLOW: std_logic;

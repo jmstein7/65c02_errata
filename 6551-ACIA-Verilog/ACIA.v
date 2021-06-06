@@ -1,4 +1,4 @@
-// File ACIA.vhd translated with vhd2vl v3.0 VHDL to Verilog RTL translator
+// File vhdl/ACIA.vhd translated with vhd2vl v3.0 VHDL to Verilog RTL translator
 // vhd2vl settings:
 //  * Verilog Module Declaration Style: 2001
 
@@ -60,7 +60,7 @@ reg [3:0] R_SBR = 4'b0000;
 reg [1:0] R_WDL = 2'b00;
 reg [1:0] R_PMC = 2'b00;
 reg [1:0] R_TIC = 2'b00;
-wire BCLK = 1'b0;
+wire BCLK;
 wire RXFULL;
 wire FRAME;
 wire OVERFLOW;
