@@ -42,6 +42,13 @@ module top
    output        rts
    );
 
+   // RAM/ROM sizing
+   parameter RAM_ADDR_BITS = 15;   // 32K
+   parameter ROM_ADDR_BITS = 14;   // 16K
+
+   localparam RAM_END = 2**RAM_ADDR_BITS;
+   localparam ROM_START = 65536-2**ROM_ADDR_BITS;
+
    // Clock Enable signals
    reg [1:0]         clken_ctr = 2'b00;
    reg               cpu_clken;
@@ -57,11 +64,17 @@ module top
 
    // RAM signals
    wire              ram_e;
-   wire [7:0]        ram_dout;
+
+   // Block RAM
+   reg [7:0]         ram[0:2**RAM_ADDR_BITS-1];
+   reg [7:0]         ram_dout;
 
    // ROM signals
    wire              rom_e;
-   wire [7:0]        rom_dout;
+
+   // Block ROM
+   reg [7:0]         rom[0:2**ROM_ADDR_BITS-1];
+   reg [7:0]         rom_dout;
 
    // ACIA signals
    wire              acia_e;
@@ -142,38 +155,27 @@ module top
    // RAM
    // ========================================================
 
-   assign ram_e = (cpu_addr < 16'h8000);
+   assign ram_e = (cpu_addr < RAM_END);
 
-   // TODO: It's not really necessary for this to be an external module
-   // It's only about 5 lines of verilog to infer a blcok RAM
-
-   SFOT_ram RAM_alpha
-     (
-      .addra(cpu_addr),         // Address bus, width determined from RAM_DEPTH
-      .dina(cpu_dout),          // RAM input data
-      .clk(clk),                // Clock
-      .wea(cpu_we && cpu_clken),// Write enable
-      .ena(ram_e),              // RAM Enable, for additional power savings, disable port when not in use
-      .douta(ram_dout)          // RAM output data
-      );
+   always @(posedge clk) begin
+      if (ram_e && cpu_we && cpu_clken)
+        ram[cpu_addr[RAM_ADDR_BITS-1:0]] = cpu_dout;
+      ram_dout <= ram[cpu_addr[RAM_ADDR_BITS:0]];
+   end
 
    // ========================================================
    // ROM
    // ========================================================
 
-   assign rom_e = (cpu_addr >= 16'hc000);
+   assign rom_e = (cpu_addr >= ROM_START);
 
-   // TODO: It's not really necessary for this to be an external module
-   // It's only about 5 lines of verilog to infer a block ROM
+   initial begin
+      $readmemh("rtest_hex.txt", rom);
+   end
 
-   SFOT_ROM_16k ROM_alpha
-     (
-      .clk(clk),
-      .rom_enable(rom_e),
-      .read(1'b1),
-      .addra(cpu_addr),
-      .douta(rom_dout)
-      );
+   always @(posedge clk) begin
+      rom_dout <= rom[cpu_addr[ROM_ADDR_BITS-1:0]];
+   end
 
    // ========================================================
    // ACIA
