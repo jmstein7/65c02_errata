@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
-[*] Sun Jun  6 19:51:03 2021
+[*] Mon Jun  7 14:04:16 2021
 [*]
 [dumpfile] "/disk1/home/dmb/atom/65c02_errata/dump.vcd"
-[dumpfile_mtime] "Sun Jun  6 19:49:22 2021"
-[dumpfile_size] 18504825
+[dumpfile_mtime] "Mon Jun  7 13:56:51 2021"
+[dumpfile_size] 8446936
 [savefile] "/disk1/home/dmb/atom/65c02_errata/top_tb.gtkw"
-[timestart] 23151000
+[timestart] 86703000
 [size] 1853 1145
 [pos] -1 -1
-*-20.000000 26125000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-19.000000 88207000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] top_tb.
 [treeopen] top_tb.top.
 [treeopen] top_tb.top.ACIA_a.
@@ -26,11 +26,19 @@ top_tb.address[15:0]
 @28
 top_tb.rwb
 @22
+top_tb.top.via_dout[7:0]
 top_tb.data_io[7:0]
 @28
 top_tb.phi2
+top_tb.top.cpu_clken
 @200
 -
+@28
+top_tb.top.via_clken
+top_tb.top.via_clken2
+@23
+top_tb.top.via_dout[7:0]
+top_tb.top.via_dout_r[7:0]
 @28
 top_tb.rxd
 top_tb.txd
@@ -50,9 +58,6 @@ top_tb.via_port_b[7:0]
 -
 @28
 top_tb.top.clk
-@29
-top_tb.top.cpu_clken
-@28
 top_tb.top.reset
 @200
 -
@@ -88,6 +93,5 @@ top_tb.top.ACIA_a.C_BRGEN.R_SBR[3:0]
 top_tb.top.via_e
 @22
 top_tb.top.via_dout[7:0]
-top_tb.top.via_dout_r[7:0]
 [pattern_trace] 1
 [pattern_trace] 0

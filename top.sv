@@ -37,6 +37,7 @@ module top
    inout         via_cb2,
 // output [15:0] address,
    output        rwb,
+   output        sync,
    output        phi2,
    output        led_a,
    output        resb,
@@ -139,7 +140,7 @@ module top
       .do(cpu_dout),
       .addr(cpu_addr),
       .nwe(cpu_nwe),
-      .sync(),
+      .sync(sync),
       .sync_irq(),
       .Regs()
       );
@@ -171,6 +172,7 @@ module top
        .WE(cpu_we_next),        // write enable (early)
        .IRQ(1'b0),              // interrupt request
        .NMI(1'b0),              // non-maskable interrupt request
+       .SYNC(sync),
        .RDY(cpu_clken)          // RSY is used as a synchronous clock enable
        );
 
