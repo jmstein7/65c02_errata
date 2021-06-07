@@ -42,6 +42,10 @@ module top
    output        rts
    );
 
+   // Clock-enable counter size - the CPU runs at:
+   //    system clock rate / (2 ** CLKEN_BITS)
+   parameter CLKEN_BITS = 2;
+
    // RAM/ROM sizing
    parameter RAM_ADDR_BITS = 15;   // 32K
    parameter ROM_ADDR_BITS = 14;   // 16K
@@ -50,7 +54,7 @@ module top
    localparam ROM_START = 65536-2**ROM_ADDR_BITS;
 
    // Clock Enable signals
-   reg [1:0]         clken_ctr = 2'b00;
+   reg [CLKEN_BITS-1:0] clken_ctr = 0;
    reg               cpu_clken;
 
    // CPU signals
@@ -110,7 +114,7 @@ module top
    // keeps being clocked when reset is asserted.
    always @(posedge clk) begin
       clken_ctr <= clken_ctr + 1'b1;
-      cpu_clken <= (clken_ctr == 2'b11);
+      cpu_clken <= &clken_ctr; // active when all 1's
    end
 
    // ========================================================
@@ -263,7 +267,7 @@ module top
    // External bus interface
    // ========================================================
 
-   assign phi2 = clken_ctr[1];
+   assign phi2 = clken_ctr[CLKEN_BITS-1];
 
    assign resb = !reset;
 
