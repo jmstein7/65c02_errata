@@ -109,7 +109,7 @@ module top
    // Note: this block does not use a reset to ensure everything
    // keeps being clocked when reset is asserted.
    always @(posedge clk) begin
-      clken_ctr <= clken_ctr + 1;
+      clken_ctr <= clken_ctr + 1'b1;
       cpu_clken <= (clken_ctr == 2'b11);
    end
 
@@ -184,14 +184,14 @@ module top
    assign acia_e = (cpu_addr >= 16'h8000 && cpu_addr <= 16'h800F);
 
    // Include cpu_clken here to avoid muptiple accesses
-   assign acia_csb = ~(acia_e && cpu_clken);
+   assign acia_csb = !(acia_e && cpu_clken);
 
    ACIA ACIA_a
      (
       .RESET(resb),         //: in     std_logic;
       .PHI2(clk),           //: in     std_logic;
       .CS(acia_csb),        //: in     std_logic;
-      .RWN(~cpu_we),        //: in     std_logic;
+      .RWN(!cpu_we),        //: in     std_logic;
       .RS(cpu_addr[1:0]),   //: in     std_logic_vector(1 downto 0);
       .DATAIN(cpu_dout),    //: in     std_logic_vector(7 downto 0);
       .DATAOUT(acia_dout),  //: out    std_logic_vector(7 downto 0);
@@ -220,7 +220,7 @@ module top
       .I_DATA(cpu_dout),
       .O_DATA(via_dout),
       .O_DATA_OE_L(),
-      .I_RW_L(~cpu_we),
+      .I_RW_L(!cpu_we),
       .I_CS1(via_e),
       .I_CS2_L(1'b0),
       .O_IRQ_L(), // not open drain
@@ -244,19 +244,19 @@ module top
       .O_PB_OE_L(via_pb_oe_n)
       );
 
-   assign via_port_a = (via_pa_oe_n == 0) ? via_pa_out : 'bZ;
+   assign via_port_a = (!via_pa_oe_n) ? via_pa_out : 8'hZZ;
    assign via_pa_in = via_port_a;
 
-   assign via_port_b = (via_pb_oe_n == 0) ? via_pb_out : 'bZ;
+   assign via_port_b = (!via_pb_oe_n) ? via_pb_out : 8'hZZ;
    assign via_pb_in = via_port_b;
 
-   assign via_ca2 = (via_ca2_oe_n == 0) ? via_ca2_out : 'bZ;
+   assign via_ca2 = (!via_ca2_oe_n) ? via_ca2_out : 1'bZ;
    assign via_ca2_in = via_ca2;
 
-   assign via_cb2 = (via_cb2_oe_n == 0) ? via_cb2_out : 'bZ;
+   assign via_cb2 = (!via_cb2_oe_n) ? via_cb2_out : 1'bZ;
    assign via_cb2_in = via_cb2;
 
-   assign via_cb1 = (via_cb1_oe_n == 0) ? via_cb1_out : 'bZ;
+   assign via_cb1 = (!via_cb1_oe_n) ? via_cb1_out : 1'bZ;
    assign via_cb1_in = via_cb1;
 
    // ========================================================
@@ -265,15 +265,15 @@ module top
 
    assign phi2 = clken_ctr[1];
 
-   assign resb = ~reset;
+   assign resb = !reset;
 
-   assign rwb = ~cpu_we;
+   assign rwb = !cpu_we;
 
    // TODO: ideally this should be visible externally
    // assign address = cpu_addr;
 
    // Reads default to the external bus when no other enable matches
-   assign bus_e = (~rom_e && ~ram_e && ~acia_e && via_e);
+   assign bus_e = (!rom_e && !ram_e && !acia_e && !via_e);
 
    assign data_io  = cpu_we ? cpu_dout :
                      bus_e  ? 8'hZZ    :
@@ -283,6 +283,6 @@ module top
    // Miscellaneous
    // ========================================================
 
-   assign led_a = ~reset;
+   assign led_a = !reset;
 
 endmodule
