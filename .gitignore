@@ -2,3 +2,6 @@
 *~
 a.out
 dump.vcd
+iseconfig/
+working/
+not_in_git/
