@@ -50,14 +50,14 @@ parameter [2:0]
   state_Stop2 = 5;
 
 reg [2:0] r_rx_fsm = state_Idle;
-reg [31:0] r_clkdiv = 0;
-reg [31:0] r_bitcnt = 0;
+reg [3:0] r_clkdiv = 0;
+reg [2:0] r_bitcnt = 0;
 reg [7:0] r_rx_shiftreg = 8'b00000000;
 reg r_rx_parity = 1'b0;
 reg r_rxreq = 1'b0;
 reg r_rxreceive = 1'b0;
 
-  always @(posedge BCLK, posedge RESET) begin
+  always @(posedge BCLK, negedge RESET) begin
     if(RESET == 1'b0) begin
       r_clkdiv <= 0;
       r_bitcnt <= 0;
@@ -89,13 +89,13 @@ reg r_rxreceive = 1'b0;
           end
         end
         else begin
-          r_clkdiv <= r_clkdiv + 1;
+          r_clkdiv <= r_clkdiv + 1'b1;
         end
       end
       state_Data : begin
         r_rxreceive <= 1'b1;
         if(r_clkdiv < 15) begin
-          r_clkdiv <= r_clkdiv + 1;
+          r_clkdiv <= r_clkdiv + 1'b1;
           r_rx_fsm <= state_Data;
         end
         else begin
@@ -104,7 +104,7 @@ reg r_rxreceive = 1'b0;
           r_rx_shiftreg[7] <= RX;
           r_rx_parity <= r_rx_parity ^ RX;
           if(r_bitcnt < 7) begin
-            r_bitcnt <= r_bitcnt + 1;
+            r_bitcnt <= r_bitcnt + 1'b1;
             r_rx_fsm <= state_Data;
           end
           else begin
@@ -146,7 +146,7 @@ reg r_rxreceive = 1'b0;
           r_rx_fsm <= state_Stop;
         end
         else begin
-          r_clkdiv <= r_clkdiv + 1;
+          r_clkdiv <= r_clkdiv + 1'b1;
         end
       end
       state_Stop : begin
@@ -174,7 +174,7 @@ reg r_rxreceive = 1'b0;
           r_clkdiv <= 0;
         end
         else begin
-          r_clkdiv <= r_clkdiv + 1;
+          r_clkdiv <= r_clkdiv + 1'b1;
         end
       end
       state_Stop2 : begin
@@ -183,7 +183,7 @@ reg r_rxreceive = 1'b0;
           r_rx_fsm <= state_Idle;
         end
         else begin
-          r_clkdiv <= r_clkdiv + 1;
+          r_clkdiv <= r_clkdiv + 1'b1;
           r_rx_fsm <= state_Stop2;
         end
       end
@@ -195,7 +195,7 @@ reg r_rxreceive = 1'b0;
     end
   end
 
-  always @(posedge PHI2, posedge RESET) begin
+  always @(posedge PHI2, negedge RESET) begin
     if(RESET == 1'b0) begin
       RXFULL <= 1'b0;
       r_rxreq <= 1'b0;

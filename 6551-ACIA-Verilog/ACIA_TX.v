@@ -48,15 +48,15 @@ parameter [2:0]
   state_Stop2 = 5;
 
 reg [2:0] r_tx_fsm = state_Idle;
-reg [31:0] r_clk = 0;
-reg [31:0] r_bitcnt = 0;
+reg [3:0] r_clk = 0;
+reg [2:0] r_bitcnt = 0;
 reg [7:0] r_tx_shiftreg = 8'b00000000;
 reg r_tx_parity;
 reg [7:0] r_txdata = 8'b00000000;
 reg r_txready = 1'b0;
 reg r_txtaken = 1'b0;
 
-  always @(posedge PHI2, posedge RESET) begin
+  always @(posedge PHI2, negedge RESET) begin
     if(RESET == 1'b0) begin
       r_txdata <= {8{1'b0}};
       TXFULL <= 1'b0;
@@ -75,7 +75,7 @@ reg r_txtaken = 1'b0;
     end
   end
 
-  always @(posedge BCLK, posedge RESET) begin
+  always @(posedge BCLK, negedge RESET) begin
     if(RESET == 1'b0) begin
       r_clk <= 0;
       r_bitcnt <= 0;
@@ -102,13 +102,13 @@ reg r_txtaken = 1'b0;
           r_clk <= 0;
         end
         else begin
-          r_clk <= r_clk + 1;
+          r_clk <= r_clk + 1'b1;
         end
       end
       state_Data : begin
         TX <= r_tx_shiftreg[0];
         if(r_clk < 15) begin
-          r_clk <= r_clk + 1;
+          r_clk <= r_clk + 1'b1;
           r_tx_fsm <= state_Data;
         end
         else begin
@@ -117,7 +117,7 @@ reg r_txtaken = 1'b0;
           if(r_bitcnt < 7) begin
             r_tx_shiftreg[6:0] <= r_tx_shiftreg[7:1];
             r_tx_shiftreg[7] <= 1'b0;
-            r_bitcnt <= r_bitcnt + 1;
+            r_bitcnt <= r_bitcnt + 1'b1;
             r_tx_fsm <= state_Data;
           end
           else begin
@@ -155,7 +155,7 @@ reg r_txtaken = 1'b0;
         endcase
         if(r_clk < 15) begin
           r_tx_fsm <= state_Parity;
-          r_clk <= r_clk + 1;
+          r_clk <= r_clk + 1'b1;
         end
         else begin
           r_clk <= 0;
@@ -174,7 +174,7 @@ reg r_txtaken = 1'b0;
           end
         end
         else begin
-          r_clk <= r_clk + 1;
+          r_clk <= r_clk + 1'b1;
         end
       end
       state_Stop2 : begin
@@ -183,7 +183,7 @@ reg r_txtaken = 1'b0;
           r_tx_fsm <= state_Idle;
         end
         else begin
-          r_clk <= r_clk + 1;
+          r_clk <= r_clk + 1'b1;
           r_tx_fsm <= state_Stop2;
         end
       end

@@ -36,7 +36,7 @@ reg [31:0] r_clk = 0;
 reg r_bclk = 1'b0;
 
   assign BCLK = (R_SBR == 3'b000) ? XTLI : r_bclk;
-  always @(posedge XTLI, posedge RESET) begin
+  always @(posedge XTLI, negedge RESET) begin
     if((RESET == 1'b0)) begin
       r_clk <= 0;
       r_bclk <= 1'b0;
