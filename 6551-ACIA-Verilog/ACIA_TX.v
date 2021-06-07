@@ -55,8 +55,11 @@ reg r_tx_parity;
 reg [7:0] r_txdata = 8'b00000000;
 reg r_txready = 1'b0;
 reg r_txtaken = 1'b0;
+reg r_txready_s = 1'b0;
+reg r_txtaken_s = 1'b0;
 
   always @(posedge PHI2, negedge RESET) begin
+    r_txtaken_s <= r_txtaken;
     if(RESET == 1'b0) begin
       r_txdata <= {8{1'b0}};
       TXFULL <= 1'b0;
@@ -67,7 +70,7 @@ reg r_txtaken = 1'b0;
         TXFULL <= 1'b1;
       end
       else begin
-        if((r_txready == 1'b1 && r_txtaken == 1'b1)) begin
+        if((r_txready == 1'b1 && r_txtaken_s == 1'b1)) begin
           r_txready <= 1'b0;
           TXFULL <= 1'b0;
         end
@@ -83,12 +86,13 @@ reg r_txtaken = 1'b0;
       r_txtaken <= 1'b0;
       r_tx_parity <= 1'b0;
     end else begin
+      r_txready_s <= r_txready;
       case(r_tx_fsm)
       state_Idle : begin
         TX <= 1'b1;
         r_clk <= 0;
         r_tx_parity <= 1'b0;
-        if(r_txready == 1'b1 && CTSB == 1'b0) begin
+        if(r_txready_s == 1'b1 && CTSB == 1'b0) begin
           r_tx_shiftreg <= r_txdata;
           r_tx_fsm <= state_Start;
           r_txtaken <= 1'b1;
