@@ -19,6 +19,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 
+// `define USE_ALAND_CORE
+
 module top
   (
    input         clk,
@@ -59,9 +61,6 @@ module top
 
    // CPU signals
    wire [7:0]        cpu_din;
-   wire [7:0]        cpu_dout_next;
-   wire [15:0]       cpu_addr_next;
-   wire              cpu_we_next;
    reg [7:0]         cpu_dout;
    reg [15:0]        cpu_addr;
    reg               cpu_we;
@@ -117,9 +116,44 @@ module top
       cpu_clken <= &clken_ctr; // active when all 1's
    end
 
+`ifdef USE_ALAND_CORE
+
    // ========================================================
-   // 65C02
+   // 65C02: Alan D's VHDL Core
+   // (cycle accurate, good for tracing using the 6502 Decoder)
    // ========================================================
+
+   wire cpu_nwe;
+
+   R65C02 cpu_alpha
+     (
+      .clk(clk),               // system clock
+      .reset(!reset),           // reset
+      .enable(cpu_clken),
+      .nmi_n(1'b1),
+      .irq_n(1'b1),
+      .di(cpu_din),
+      .do(cpu_dout),
+      .addr(cpu_addr),
+      .nwe(cpu_nwe),
+      .sync(),
+      .sync_irq(),
+      .Regs()
+      );
+
+   always @(cpu_nwe)
+      cpu_we = !cpu_nwe;
+
+`else
+
+   // ========================================================
+   // 65C02: Arlet's Verilog Core
+   // (not cycle accurate)
+   // ========================================================
+
+   wire [15:0] cpu_addr_next;
+   wire [7:0]  cpu_dout_next;
+   wire        cpu_we_next;
 
    // Note, the AB, DO and WE  outputs are one early (compared
    // to a normal 6502). Avoid using them directly unless you
@@ -146,6 +180,8 @@ module top
            cpu_we   <= cpu_we_next;
        end
    end
+
+`endif
 
    // CPU data input mux, default to the external bus if
    // nothing internal is selected.
