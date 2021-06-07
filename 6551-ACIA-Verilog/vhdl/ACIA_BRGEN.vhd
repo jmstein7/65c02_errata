@@ -7,7 +7,7 @@ entity ACIA_BRGEN is
   port (
     RESET     : in     std_logic;
     XTLI      : in     std_logic;
-    BCLK      : buffer std_logic;
+    BCLK      : out    std_logic;
     R_SBR     : in     std_logic_vector(3 downto 0)
     );
 end ACIA_BRGEN;

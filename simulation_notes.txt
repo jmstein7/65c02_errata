@@ -1,0 +1,160 @@
+Notes on things I had to fix...
+
+1. Wrote a simple test harness
+
+2. Lots of iverilog compile errors due to wire definitions:
+
+     dmb@quadhog:~/atom/65c02_errata$ iverilog top.sv cpu_65c02.v SFOT_RAM32.v rom_unit.v ALU.v
+     top.sv:48: error: reg DO; cannot be driven by primitives or continuous assignment.
+     top.sv:50: error: reg DI; cannot be driven by primitives or continuous assignment.
+     top.sv:53: error: reg address_bus; cannot be driven by primitives or continuous assignment.
+     top.sv:62: error: reg ram_write; cannot be driven by primitives or continuous assignment.
+     top.sv:63: error: reg read_bus; cannot be driven by primitives or continuous assignment.
+     top.sv:65: error: reg read; cannot be driven by primitives or continuous assignment.
+     top.sv:66: error: reg write_bus; cannot be driven by primitives or continuous assignment.
+     top.sv:84: error: reg AD; cannot be driven by primitives or continuous assignment.
+     top.sv:84: error: Output port expression must support continuous assignment.
+     top.sv:84:      : Port 3 (AB) of cpu_65c02 is connected to AD
+     top.sv:86: error: reg write; cannot be driven by primitives or continuous assignment.
+     top.sv:86: error: Output port expression must support continuous assignment.
+     top.sv:86:      : Port 5 (DO) of cpu_65c02 is connected to write
+     top.sv:99: error: reg ram_read; cannot be driven by primitives or continuous assignment.
+     top.sv:99: error: Output port expression must support continuous assignment.
+     top.sv:99:      : Port 6 (douta) of SFOT_ram is connected to ram_read
+     top.sv:108: error: reg rom_read; cannot be driven by primitives or continuous assignment.
+     top.sv:108: error: Output port expression must support continuous assignment.
+     top.sv:108:      : Port 5 (douta) of SFOT_ROM_16k is connected to rom_read
+     15 error(s) during elaboration.
+
+All of these fixed by changing type to wire.
+
+3. Fetching FFFC/FFFD returns XX
+
+This is because internally the ROM is 16K (14 bits), but being indexed
+by a 16-bit value. Truncating to 14 bits fixed this.
+
+Start of reset code is:
+
+C185   D8         CLD
+C186   58         CLI
+C187   20 5D C1   JSR $C15D
+C18A   A9 0D      LDA #$0D
+C18C   20 A5 C2   JSR $C2A5
+C18F   A9 0F      LDA #$0F
+
+And the subroutine ay C15D is:
+
+C15D   A9 10      LDA #$10
+C15F   8D 03 80   STA $8003
+C162   A9 C9      LDA #$C9
+C164   8D 02 80   STA $8002
+C167   60         RTS
+
+4. Supurius interrupt after CLI
+
+This is because IRQ/NMI are floating.
+
+Assigning to 1'b0 fixed this.
+
+5. JSR writes to undefined address
+
+This is because there has been no TXS to initialize the stack pointer.
+
+Add a reset preable:
+FFF0   A2 FF      LDX #$FF
+FFF2   9A         TXS
+FFF4   4C 85 C1   JMP $C185
+
+Then chage the reset vector:
+FFFC   F0 FF
+
+Now JSR writes to 01FF/01FE
+
+6. JSR head off to $C1C1
+
+This is due to incorrect pipelining
+
+This fixed it:
+
+// Delay mux select signals to line up with RAM/ROM outputs
+    reg ram_select;
+    reg rom_select;
+    always @(posedge clk) begin
+        ram_select <= RE && ram_e;
+        rom_select <= RE && rom_e;
+    end
+    assign read = ram_select ? ram_read : (rom_select ? rom_read : read_bus);
+
+After this it run's for about 450us then ends up in a loop polling for the ACIA:
+
+C2AB   20 00 EF   JSR $EF00
+C2AE   AD 01 80   LDA $8001
+C2B1   29 10      AND #$10
+C2B3   F0 F9      BEQ $C2AE
+
+So lets add an ACIA to the test bench...
+
+7. Added an external ACIA to the test bench
+
+assign  acia_select = ({address[15:2], 2'b0} == 16'h8000);
+
+always begin
+   @(negedge clk) write_data <= (rwb && acia_select && address[1:0] == 2'b01) ? 8'h10 : 8'hZZ;
+   @(posedge clk) write_data <= 8'hZZ;
+end
+
+always @(posedge clk) begin
+   if (!rwb && acia_select && address[1:0] == 2'b00) begin
+      $display("%x %c", data_io, data_io);
+   end
+end
+
+assign data_io = write_data;
+
+Didn't work, because the pipelining of the external data bus is wrong...
+
+8. Fix pipelining of external data bus
+
+// Properly pipeline external data bus
+    reg [7:0] write_bus;
+    always @(posedge clk) begin
+        if (rdy) begin
+           address   <= address_bus;
+           rwb       <= RE;
+           write_bus <= write;
+        end
+    end
+    assign data_io = (!rwb) ? write_bus : ram_select ? ram_read : rom_select ? rom_read : 8'hZZ;
+    assign read_bus = data_io;
+
+With this change, I get:
+
+dmb@quadhog:~/atom/65c02_errata$ ./simulate
+VCD info: dumpfile dump.vcd opened for output.
+0d
+57 W
+65 e
+6c l
+63 c
+6f o
+6d m
+65 e
+20
+74 t
+6f o
+20
+4a J
+53 S
+4d M
+4f O
+4e N
+20
+31 1
+2e .
+30 0
+2e .
+0d
+5c \
+0d
+20
+08

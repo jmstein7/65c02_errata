@@ -40,7 +40,7 @@
 // Revision list
 //
 //        dmb: ier bit 7 should read back as '1'
-//        dmb: Fixes to sr_do_shift change that broke MMFS on the Beeb (SR mode 
+//        dmb: Fixes to sr_do_shift change that broke MMFS on the Beeb (SR mode
 // version 005 Many fixes to all areas, VIA now passes all VICE tests
 // version 004 fixes to PB7 T1 control and Mode 0 Shift Register operation
 // version 003 fix reset of T1/T2 IFR flags if T1/T2 is reload via reg5/reg9 from wolfgang (WoS)
@@ -798,12 +798,16 @@ module m6522
    end
 
    // Ensure we don't start counting until the P2 clock after r_acr is changed
-   always @(posedge I_P2_H) begin
-      if (r_acr[5] == 1'b0) begin
-         t2_cnt_clk <= 1'b1;
-      end
-      else begin
-         t2_cnt_clk <= 1'b0;
+   always @(posedge CLK) begin
+      if (ENA_4 == 1'b1)  begin
+         if (p2_h_t1 == 1'b0 && I_P2_H == 1'b1) begin
+            if (r_acr[5] == 1'b0) begin
+               t2_cnt_clk <= 1'b1;
+            end
+            else begin
+               t2_cnt_clk <= 1'b0;
+            end
+         end
       end
    end
 

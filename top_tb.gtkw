@@ -1,0 +1,97 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Mon Jun  7 14:04:16 2021
+[*]
+[dumpfile] "/disk1/home/dmb/atom/65c02_errata/dump.vcd"
+[dumpfile_mtime] "Mon Jun  7 13:56:51 2021"
+[dumpfile_size] 8446936
+[savefile] "/disk1/home/dmb/atom/65c02_errata/top_tb.gtkw"
+[timestart] 86703000
+[size] 1853 1145
+[pos] -1 -1
+*-19.000000 88207000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] top_tb.
+[treeopen] top_tb.top.
+[treeopen] top_tb.top.ACIA_a.
+[treeopen] top_tb.top.cpu_alpha.
+[sst_width] 223
+[signals_width] 233
+[sst_expanded] 1
+[sst_vpaned_height] 344
+@28
+top_tb.clk
+top_tb.reset
+@22
+top_tb.address[15:0]
+@28
+top_tb.rwb
+@22
+top_tb.top.via_dout[7:0]
+top_tb.data_io[7:0]
+@28
+top_tb.phi2
+top_tb.top.cpu_clken
+@200
+-
+@28
+top_tb.top.via_clken
+top_tb.top.via_clken2
+@23
+top_tb.top.via_dout[7:0]
+top_tb.top.via_dout_r[7:0]
+@28
+top_tb.rxd
+top_tb.txd
+top_tb.cts
+top_tb.rts
+@200
+-
+@28
+top_tb.via_ca1
+top_tb.via_ca2
+top_tb.via_cb1
+top_tb.via_cb2
+@22
+top_tb.via_port_a[7:0]
+top_tb.via_port_b[7:0]
+@200
+-
+@28
+top_tb.top.clk
+top_tb.top.reset
+@200
+-
+@22
+top_tb.top.cpu_addr[15:0]
+top_tb.top.cpu_din[7:0]
+top_tb.top.cpu_dout[7:0]
+@28
+top_tb.top.cpu_we
+top_tb.top.cpu_we_next
+@200
+-
+@28
+top_tb.top.rom_e
+@22
+top_tb.top.rom_dout[7:0]
+@200
+-
+@28
+top_tb.top.ram_e
+@22
+top_tb.top.ram_dout[7:0]
+@200
+-
+@28
+top_tb.top.acia_e
+@22
+top_tb.top.acia_dout[7:0]
+top_tb.top.ACIA_a.C_BRGEN.R_SBR[3:0]
+@200
+-
+@28
+top_tb.top.via_e
+@22
+top_tb.top.via_dout[7:0]
+[pattern_trace] 1
+[pattern_trace] 0

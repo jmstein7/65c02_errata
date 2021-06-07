@@ -28,8 +28,8 @@ entity ACIA is
     CTSB    : in     std_logic;
     DTRB    : out    std_logic;
     RXD     : in     std_logic;
-    TXD     : buffer std_logic;
-    IRQn    : buffer std_logic
+    TXD     : out    std_logic;
+    IRQn    : out    std_logic
    );
 end ACIA;
 
@@ -41,7 +41,7 @@ component ACIA_RX
     PHI2      : in     std_logic;
     RX        : in     std_logic;
     RXDATA    : out    std_logic_vector(7 downto 0);
-    RXFULL    : buffer std_logic;
+    RXFULL    : out    std_logic;
     FRAME     : out    std_logic;
     OVERFLOW  : out    std_logic;
     RXTAKEN   : in     std_logic;
@@ -58,7 +58,7 @@ component ACIA_TX is
     BCLK      : in     std_logic;
     PHI2      : in     std_logic;
     CTSB      : in     std_logic;
-    TX        : buffer std_logic;
+    TX        : out    std_logic;
     TXDATA    : in     std_logic_vector(7 downto 0);
     R_PME     : in     std_logic;
     R_PMC     : in     std_logic_vector(1 downto 0);
@@ -72,25 +72,25 @@ component ACIA_BRGEN is
   port (
     RESET     : in     std_logic;
     XTLI      : in     std_logic;
-    BCLK      : buffer std_logic;
-    R_SBR     : in     std_logic_vector
+    BCLK      : out    std_logic;
+    R_SBR     : in     std_logic_vector(3 downto 0)
     );
 end component;
 
-signal RXDATA:   std_logic_vector(7 downto 0) := "00000000";
+signal RXDATA:   std_logic_vector(7 downto 0);
 signal TXDATA:   std_logic_vector(7 downto 0) := "00000000";
 signal R_SBR:    std_logic_vector(3 downto 0) := "0000";
 signal R_WDL:    std_logic_vector(1 downto 0) := "00";
 signal R_PMC:    std_logic_vector(1 downto 0) := "00";
 signal R_TIC:    std_logic_vector(1 downto 0) := "00";
-signal BCLK:     std_logic := '0';
-signal RXFULL:   std_logic := '0';
-signal FRAME:    std_logic := '0';
-signal OVERFLOW: std_logic := '0';
-signal PARITY:   std_logic := '0';
+signal BCLK:     std_logic;
+signal RXFULL:   std_logic;
+signal FRAME:    std_logic;
+signal OVERFLOW: std_logic;
+signal PARITY:   std_logic;
 signal RXTAKEN:  std_logic := '0';
 signal TXLATCH:  std_logic := '0';
-signal TXFULL:   std_logic := '0';
+signal TXFULL:   std_logic;
 signal R_SBN:    std_logic := '0';
 signal R_PME:    std_logic := '0';
 signal R_REM:    std_logic := '0';
@@ -138,41 +138,8 @@ C_BRGEN : ACIA_BRGEN port map (
 );
 DTRB <= NOT R_DTR;
 
-proc_bus : process (RESET,PHI2,CS)
+proc_bus1 : process (RESET,PHI2)
 begin
-  if RESET = '0' then
-    RXTAKEN <= '0';
-  elsif falling_edge(PHI2) then
-    if (CS = '0' and RWN = '1') then
-      if (rs = "00") then
-        DATAOUT <= RXDATA;
-        RXTAKEN <= '1';
-      elsif (rs = "01") then
-      DATAOUT(7) <= NOT IRQn;
-      DATAOUT(6) <= '0';
-      DATAOUT(5) <= '0';
-      DATAOUT(4) <= NOT TXFULL;
-      DATAOUT(3) <= RXFULL;
-      DATAOUT(2) <= OVERFLOW;
-      DATAOUT(1) <= FRAME;
-      DATAOUT(0) <= PARITY;
-    elsif (rs = "10") then
-      DATAOUT(7 downto 6) <= R_PMC;
-      DATAOUT(5) <= R_PME;
-      DATAOUT(4) <= R_REM;
-      DATAOUT(3 downto 2) <= R_TIC;
-      DATAOUT(1) <= R_IRD;
-      DATAOUT(0) <= R_DTR;
-    elsif (rs = "11") then
-      DATAOUT(7) <= R_SBN;
-      DATAOUT(6 downto 5) <= R_WDL;
-      DATAOUT(4) <= R_RCS;
-      DATAOUT(3 downto 0) <= R_SBR;
-    end if;
-    else
-      RXTAKEN <= '0';
-    end if;
-  end if;
 
   if (RESET = '0') then
     TXLATCH <= '0';
@@ -187,12 +154,12 @@ begin
     RTSB <= '1';
   elsif falling_edge(PHI2) then
     if (CS = '0' and RWN = '0') then
-      if (rs = "00") then
+      if (RS = "00") then
         TXDATA <= DATAIN;
         TXLATCH <= '1';
-      elsif (rs = "01") then
+      elsif (RS = "01") then
         --- RESET ---
-      elsif (rs = "10") then
+      elsif (RS = "10") then
         R_PMC <= DATAIN(7 downto 6);
         R_PME <= DATAIN(5);
         R_REM <= DATAIN(4);
@@ -204,7 +171,7 @@ begin
       else
         RTSB <= '0';
       end if;
-      elsif (rs = "11") then
+      elsif (RS = "11") then
         R_SBN <= DATAIN(7);
         R_WDL <= DATAIN(6 downto 5);
         R_RCS <= DATAIN(4);
@@ -214,6 +181,45 @@ begin
       TXLATCH <= '0';
     end if;
   end if;
+end process;
+
+proc_bus2 : process (RESET,PHI2)
+begin
+
+  if RESET = '0' then
+    RXTAKEN <= '0';
+  elsif falling_edge(PHI2) then
+    if (CS = '0' and RWN = '1') then
+      if (RS = "00") then
+        DATAOUT <= RXDATA;
+        RXTAKEN <= '1';
+      elsif (RS = "01") then
+      DATAOUT(7) <= NOT IRQn;
+      DATAOUT(6) <= '0';
+      DATAOUT(5) <= '0';
+      DATAOUT(4) <= NOT TXFULL;
+      DATAOUT(3) <= RXFULL;
+      DATAOUT(2) <= OVERFLOW;
+      DATAOUT(1) <= FRAME;
+      DATAOUT(0) <= PARITY;
+    elsif (RS = "10") then
+      DATAOUT(7 downto 6) <= R_PMC;
+      DATAOUT(5) <= R_PME;
+      DATAOUT(4) <= R_REM;
+      DATAOUT(3 downto 2) <= R_TIC;
+      DATAOUT(1) <= R_IRD;
+      DATAOUT(0) <= R_DTR;
+    elsif (RS = "11") then
+      DATAOUT(7) <= R_SBN;
+      DATAOUT(6 downto 5) <= R_WDL;
+      DATAOUT(4) <= R_RCS;
+      DATAOUT(3 downto 0) <= R_SBR;
+    end if;
+    else
+      RXTAKEN <= '0';
+    end if;
+  end if;
+
 end process;
 
 IRQn <= '0' WHEN (((TXFULL = '0' AND R_TIC = "01") OR (RXFULL = '1' AND R_IRD = '0')) AND R_DTR = '1') else '1';

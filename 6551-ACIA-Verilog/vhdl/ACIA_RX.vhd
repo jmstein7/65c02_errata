@@ -10,7 +10,7 @@ entity ACIA_RX is
     BCLK      : in     std_logic;
     RX        : in     std_logic;
     RXDATA    : out    std_logic_vector(7 downto 0);
-    RXFULL    : buffer std_logic;
+    RXFULL    : out    std_logic;
     RXTAKEN   : in     std_logic;
     FRAME     : out    std_logic;
     OVERFLOW  : out    std_logic;
@@ -38,7 +38,7 @@ begin
   if RESET = '0' then
     r_clkdiv <= 0;
     r_bitcnt <= 0;
-    rxdata <= (others => '0');
+    RXDATA <= (others => '0');
     r_rx_shiftreg <= (others => '0');
     r_rx_fsm <= state_Idle;
     FRAME <= '0';
@@ -156,7 +156,7 @@ begin
   end if;
 end process;
 
-proc_RXFULL : process (PHI2,RXTAKEN,RESET)
+proc_RXFULL : process (PHI2,RESET)
 begin
 if RESET = '0' then
   RXFULL <= '0';
