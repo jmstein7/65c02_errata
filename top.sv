@@ -58,6 +58,7 @@ module top
    // Clock Enable signals
    reg [CLKEN_BITS-1:0] clken_ctr = 0;
    reg               cpu_clken;
+   reg               via_clken;
 
    // CPU signals
    wire [7:0]        cpu_din;
@@ -87,6 +88,7 @@ module top
    // VIA signals
    wire              via_e;
    wire [7:0]        via_dout;
+   reg  [7:0]        via_dout_r;
 
    wire              via_ca2_in;
    wire              via_ca2_out;
@@ -114,6 +116,7 @@ module top
    always @(posedge clk) begin
       clken_ctr <= clken_ctr + 1'b1;
       cpu_clken <= &clken_ctr; // active when all 1's
+      via_clken <= cpu_clken;
    end
 
 `ifdef USE_ALAND_CORE
@@ -185,10 +188,10 @@ module top
 
    // CPU data input mux, default to the external bus if
    // nothing internal is selected.
-   assign cpu_din = ram_e  ? ram_dout  :
-                    rom_e  ? rom_dout  :
-                    acia_e ? acia_dout :
-                    via_e  ? via_dout  :
+   assign cpu_din = ram_e  ? ram_dout   :
+                    rom_e  ? rom_dout   :
+                    acia_e ? acia_dout  :
+                    via_e  ? via_dout_r :
                     data_io;
 
    // ========================================================
@@ -254,7 +257,7 @@ module top
      (
       .CLK(clk),
       .RESET_L(resb),
-      .I_P2_H(cpu_clken),        // clock enable for CPU interface
+      .I_P2_H(via_clken),        // clock enable for CPU interface
       .ENA_4(1'b1),              // clock enable for counters/timers
       .I_RS(cpu_addr[3:0]),
       .I_DATA(cpu_dout),
@@ -283,6 +286,13 @@ module top
       .O_PB(via_pb_out),
       .O_PB_OE_L(via_pb_oe_n)
       );
+
+   always @(posedge clk) begin
+      if (via_clken) begin
+         via_dout_r <= via_dout;
+      end
+   end
+
 
    assign via_port_a = (!via_pa_oe_n) ? via_pa_out : 8'hZZ;
    assign via_pa_in = via_port_a;
