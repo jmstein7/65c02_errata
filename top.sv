@@ -63,23 +63,14 @@ module top
 
    // CPU signals
    wire [7:0]        cpu_din;
-   reg [7:0]         cpu_dout;
-   reg [15:0]        cpu_addr;
-   reg               cpu_we;
 
    // RAM signals
    wire              ram_e;
-
-   // Block RAM
-   reg [7:0]         ram[0:2**RAM_ADDR_BITS-1];
-   reg [7:0]         ram_dout;
+   wire [7:0]        ram_dout;
 
    // ROM signals
    wire              rom_e;
-
-   // Block ROM
-   reg [7:0]         rom[0:2**ROM_ADDR_BITS-1];
-   reg [7:0]         rom_dout;
+   wire [7:0]        rom_dout;
 
    // ACIA signals
    wire              acia_e;
@@ -127,7 +118,10 @@ module top
    // (cycle accurate, good for tracing using the 6502 Decoder)
    // ========================================================
 
-   wire cpu_nwe;
+   wire [15:0] cpu_addr;
+   wire [7:0]  cpu_dout;
+   wire        cpu_nwe;
+   wire        cpu_we;
 
    R65C02 cpu_alpha
      (
@@ -145,8 +139,7 @@ module top
       .Regs()
       );
 
-   always @(cpu_nwe)
-      cpu_we = !cpu_nwe;
+   assign cpu_we = !cpu_nwe;
 
 `else
 
@@ -158,6 +151,9 @@ module top
    wire [15:0] cpu_addr_next;
    wire [7:0]  cpu_dout_next;
    wire        cpu_we_next;
+   reg [15:0]  cpu_addr;
+   reg [7:0]   cpu_dout;
+   reg         cpu_we;
 
    // Note, the AB, DO and WE  outputs are one early (compared
    // to a normal 6502). Avoid using them directly unless you
@@ -202,11 +198,19 @@ module top
 
    assign ram_e = (cpu_addr < RAM_END);
 
-   always @(posedge clk) begin
-      if (ram_e && cpu_we && cpu_clken)
-        ram[cpu_addr[RAM_ADDR_BITS-1:0]] = cpu_dout;
-      ram_dout <= ram[cpu_addr[RAM_ADDR_BITS:0]];
-   end
+   generic_ram
+     #(
+       .ADDR_BITS(RAM_ADDR_BITS)
+     )
+     main_ram
+     (
+      .clk(clk),
+      .ena(1'b1), // always enabled
+      .wea(ram_e && cpu_we && cpu_clken),
+      .addr(cpu_addr[RAM_ADDR_BITS-1:0]),
+      .din(cpu_dout),
+      .dout(ram_dout)
+     );
 
    // ========================================================
    // ROM
@@ -214,13 +218,23 @@ module top
 
    assign rom_e = (cpu_addr >= ROM_START);
 
-   initial begin
-      $readmemh("rtest_hex.txt", rom);
-   end
-
-   always @(posedge clk) begin
-      rom_dout <= rom[cpu_addr[ROM_ADDR_BITS-1:0]];
-   end
+   // ROM is now a submodule again, as this appears
+   // to avoid a Vivado optimization bug when we
+   // it was directly inferred here.
+   generic_ram
+     #(
+       .ADDR_BITS(ROM_ADDR_BITS),
+       .INIT_FILE("rtest_hex.txt")
+     )
+     main_rom
+     (
+      .clk(clk),
+      .ena(1'b1), // always enabled
+      .wea(1'b0),
+      .addr(cpu_addr[ROM_ADDR_BITS-1:0]),
+      .din(8'b0),
+      .dout(rom_dout)
+     );
 
    // ========================================================
    // ACIA
