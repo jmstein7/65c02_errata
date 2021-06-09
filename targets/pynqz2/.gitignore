@@ -1,0 +1,7 @@
+vivado*.jou
+vivado*.log
+vivado_pid*
+SOC65C02.cache/
+SOC65C02.hw/
+SOC65C02.runs/
+SOC65C02.ip_user_files/
