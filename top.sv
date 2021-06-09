@@ -63,9 +63,6 @@ module top
 
    // CPU signals
    wire [7:0]        cpu_din;
-   reg [7:0]         cpu_dout;
-   reg [15:0]        cpu_addr;
-   reg               cpu_we;
 
    // RAM signals
    wire              ram_e;
@@ -121,7 +118,10 @@ module top
    // (cycle accurate, good for tracing using the 6502 Decoder)
    // ========================================================
 
-   wire cpu_nwe;
+   wire [15:0] cpu_addr;
+   wire [7:0]  cpu_dout;
+   wire        cpu_nwe;
+   wire        cpu_we;
 
    R65C02 cpu_alpha
      (
@@ -139,8 +139,7 @@ module top
       .Regs()
       );
 
-   always @(cpu_nwe)
-      cpu_we = !cpu_nwe;
+   assign cpu_we = !cpu_nwe;
 
 `else
 
@@ -152,6 +151,9 @@ module top
    wire [15:0] cpu_addr_next;
    wire [7:0]  cpu_dout_next;
    wire        cpu_we_next;
+   reg [15:0]  cpu_addr;
+   reg [7:0]   cpu_dout;
+   reg         cpu_we;
 
    // Note, the AB, DO and WE  outputs are one early (compared
    // to a normal 6502). Avoid using them directly unless you
@@ -216,6 +218,9 @@ module top
 
    assign rom_e = (cpu_addr >= ROM_START);
 
+   // ROM is now a submodule again, as this appears
+   // to avoid a Vivado optimization bug when we
+   // it was directly inferred here.
    generic_ram
      #(
        .ADDR_BITS(ROM_ADDR_BITS),
